@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="test.spring.mvc.repository.NoticeMapper">
+	<select id="noticeList" parameterType="hashmap" resultType="NoticeDTO">
+		<![CDATA[
+		select * from (select b.*,rownum r from (select * from notice where re_step=0) b order by reg_date desc) where r>=#{start} and r<=#{end}
+		]]>
+	</select>
+
+	<insert id="noticeWrite" parameterType="NoticeDTO">
+		insert into notice(noticenum,writer,noticetitle,noticecontent,ref,isFile) values(
+		notice_seq.nextval,
+		#{writer},
+		#{noticeTitle},
+		#{noticeContent},
+		notice_seq.currval,
+		#{isFile}
+		)
+	</insert>
+	<update id="isFileChange" parameterType="int">
+		update notice set isFile=#{isFile} where noticenum=#{noticeNum}
+	</update>
+	<select id="getRecentNum" resultType="int">
+		select nvl(max(noticenum),0) from notice
+	</select>
+	<insert id="fileupload" parameterType="BoardFileDTO">
+		insert into board_file(num,boardnum,filename,category) values(
+		board_file_seq.nextval,
+		#{boardNum},
+		#{filename},
+		3
+		)
+	</insert>
+	<select id="count" resultType="int">
+		select count(*) from notice where re_step=0
+	</select>
+	
+	<select id="getGrade" parameterType="String" resultType="int">
+		select status from member where id=#{id}
+	</select>
+	
+	<select id="getNoticeContent" resultType="NoticeDTO">
+		select * from notice where noticeNum=#{noticeNum} and re_step=0
+	</select>
+	<select id="getReviewCount" resultType="int">
+		select count(*) from notice where ref=#{ref} and re_step=1
+	</select>
+	<select id="getReviews" resultType="NoticeDTO" parameterType="hashmap">
+		<![CDATA[
+		select * from (select b.*,rownum r from (select * from notice where re_step=1 and ref=#{ref} order by reg_date desc) b) where r>=#{rstart} and r<=#{rend}
+		]]>
+	</select>
+	
+	<insert id="reviewWrite" parameterType="NoticeDTO">
+		insert into notice(noticenum,writer,noticetitle,noticecontent,ref,re_step,isFile) values(
+		notice_seq.nextval,
+		#{writer},
+		#{noticeTitle},
+		#{noticeContent},
+		#{ref},
+		1,
+		0
+		)
+	</insert>
+	
+	<delete id="reviewDelete">
+		delete from notice where noticeNum=#{noticenum}
+	</delete>
+	
+	<delete id="noticeDelete">
+		delete from notice where ref=#{ref}
+	</delete>
+	
+	<delete id="fileDelete">
+		delete from board_file where boardnum=#{ref} and category=3
+	</delete>
+	
+	<select id="getFileNames" resultType="BoardFileDTO">
+		select * from board_file where boardnum=#{ref} and category=3
+	</select>
+	
+	<update id="readCountUp">
+		update notice set readCount=readCount+1 where noticenum=#{noticenum}
+	</update>
+	<update id="noticeUpdate">
+		update notice 
+		<set>
+			<if test="noticeTitle!=null and noticeTitle!='' ">noticeTitle=#{noticeTitle},</if>
+			<if test="noticeContent!=null and noticeContent!= '' ">noticeContent=#{noticeContent},</if>
+			<if test="isFile != null and isFile != '' ">isFile=#{isFile}</if>
+		</set>
+		where noticenum=#{noticeNum}
+	</update>
+	<delete id="deleteFileUnit">
+		delete from board_file where num=#{num}
+	</delete>
+	<update id="isFileDown">
+		update notice set isfile=isfile-1 where noticenum=#{noticenum}
+	</update>
+	<select id="getFile" resultType="BoardFileDTO">
+		select * from board_file where num=#{num}
+	</select>
+	<select id="test" resultType="String">
+		select filename from board_file where boardnum=#{boardnum} and category=3
+	</select>
+	<select id="isFileCount">
+		select count(*) from board_file where boardnum=#{boardnum} and category=3
+	</select>
+	
+</mapper>
